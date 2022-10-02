@@ -1,0 +1,106 @@
+ArrayList<float[][]> rectanges = new ArrayList<float[][]>();   
+float randomNum = 0.5;  
+
+void setup() {
+  size(600,800);
+  startRectange();
+  frameRate(1);
+  background(255); 
+  for(int i=0;i<5;i++)
+  {
+    updateRectanges();
+  }
+}
+
+void draw() {
+     
+     
+  for (float[][] temp_rect : rectanges) {
+    drawRectanges(temp_rect);
+  }
+}
+
+
+void startRectange() {
+  float[] point0 = new float[]{0, 0};
+  float[] point1 = new float[]{600, 0};
+  float[] point2 = new float[]{600, 800};
+  float[] point3 = new float[]{0, 800};
+
+
+  float[][] rectange0 = new float[][]{point0, point1, point2, point3}; 
+  rectanges.add(rectange0);
+}
+
+
+void drawRectanges(float[][] rect) {
+  strokeWeight(10);
+  for (int i=0; i<rect.length; i++) {
+    int i_n = (i+2) % rect.length;  
+    int k=int(random(5));
+    if(k==0) fill(0,0,0);
+    if(k==1) fill(255,0,0);
+    if(k==2) fill(0,255,0);
+    if(k==3) fill(0,0,255);
+    if(k==4) fill(255,255,255);
+    rect(rect[i][0], rect[i][1], rect[i_n][0], rect[i_n][1]);  
+  }
+}
+
+
+
+void updateRectanges(){
+  ArrayList<float[][]>div_rectanges = new ArrayList<float[][]>();  
+  for(float[][]temp_rect : rectanges){                  
+    float[][][]vids = divideRectanges(temp_rect,randomNum,100000);   
+    for(int i=0; i<vids.length; i++){
+      div_rectanges.add(vids[i]);   
+    }
+  }
+  rectanges.clear();                
+  rectanges.addAll(div_rectanges);    
+}
+
+
+
+float get_rect_area(float[][]rect) {
+  float area = 0;
+  area = (rect[1][0] - rect[0][0])*(rect[3][1] - rect[0][1]);
+  return abs(area);
+}
+
+
+
+float[][][] divideRectanges(float[][]rect, float randomNum, float minArea) {
+
+  if (get_rect_area(rect) < minArea) {
+    
+    return new float[][][]{rect};
+  } else {
+
+    //偏移的量
+    float off1 = 0.5 + random(-randomNum/2, randomNum/2);
+    float off2 = 0.5 + random(-randomNum/2, randomNum/2);
+
+    //初始四点坐标
+    float[] a = rect[0];
+    float[] b = rect[1];
+    float[] c = rect[2];
+    float[] d = rect[3];
+
+    //划分后坐标
+    float[] ab = new float[]{a[0] + (b[0]-a[0])*off1, a[1]};
+    float[] bc = new float[]{b[0], b[1] + (c[1]-b[1])*off2};
+    float[] cd = new float[]{ab[0], c[1]};
+    float[] da = new float[]{a[0], bc[1]};
+    float[] center = new float[]{ab[0], bc[1]};
+
+    //存储新的矩形
+    float[][][] div_rect = new float[4][4][2];
+    div_rect[0] = new float[][]{a, ab, center, da};
+    div_rect[1] = new float[][]{ab, b, bc, center};
+    div_rect[2] = new float[][]{center, bc, c, cd};
+    div_rect[3] = new float[][]{da, center, cd, d};
+    return div_rect;
+  }
+}
