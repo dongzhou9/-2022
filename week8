@@ -1,0 +1,288 @@
+//
+
+int T ; long TT ; float PX[] = new float[100] ; float PY[] = new float[100] ;
+float X[][] = new float[2][100] ; float Y[][] = new float[2][100] ; float H[] = new float[2] ; 
+float AX[][] = new float[2][20] ; float BX[][] = new float[2][20] ; float CX[] = new float[2] ; float DX[][] = new float[2][20] ;
+float AY[][] = new float[2][20] ; float BY[][] = new float[2][20] ; float CY[] = new float[2] ; float DY[][] = new float[2][20] ;
+int I ; int II ; int PHASE ; int MODE ; int Q ; int Qmax ; int WX ; int WY ; int BI ; int CT ; float KD ;
+
+
+
+void setup(){
+
+  size(600,700) ;
+  background(200,200,200) ;
+  PHASE = 0 ; T = 0 ; MODE = 1 ;
+  
+  for ( I = 0 ; I <= 1 ; I++ ){
+    AX[I][0] = 1.5 ; BX[I][0] = -200 ; 
+    AY[I][0] = 3.5 ; BY[I][0] = 200 ;
+    DX[I][0] = 2 ; DY[I][0] = 2 ; 
+    for ( II = 1 ; II <= 19 ; II++ ){
+      AX[I][II] = 0 ; BX[I][II] = 1 ; 
+      AY[I][II] = 0 ; BY[I][II] = 1 ;
+      DX[I][II] = 0 ; DY[I][II] = 0 ; 
+    }
+    CX[I] = +100 ; CY[I] = -100 ;
+  } 
+  
+} // setup() 
+
+
+
+void draw(){
+  
+  if ( MODE == 3 ){ Qmax = 1000 ; }else{ Qmax = 0 ; }
+  while( Q <= Qmax ){
+  
+    if ( PHASE == 3 ){
+       MUTATION() ;
+       PHASE = 2 ; background(200,200,200) ; TT = millis() ; T = 0 ;
+       if ( I == 0 ){ fill(0,0,255) ; stroke(0,0,255) ; I = 1 ; }
+                else{ fill(255,0,0) ; stroke(255,0,0) ; I = 0 ; }
+       if ( Q == Qmax ){
+         strokeWeight(1) ;
+         writeFUNCTION() ;
+         stroke(0,0,0) ;
+         line(300,25,300,575) ; line(25,300,575,300) ;
+         strokeWeight(2) ;
+         CONTROLLERdraw() ;
+         strokeWeight(4) ;
+       }
+    } // PHASE == 3
+  
+    if ( PHASE == 2 ){
+        if ( millis()-TT > T*50 && MODE == 1 ){
+          CURVEdraw() ;
+          T = T + 1 ;
+          fill(200,200,200) ; noStroke() ;
+          rect(515,565,80,20) ;
+          fill(0,0,0) ;
+          textSize(16) ; fill(0,0,0) ;
+          text("t="+nf(float(T)/20,1,2),530,580) ;
+          if ( T >= 100 ){ PHASE = 3 ; }
+        } 
+        while( T < 100 && MODE >= 2 ){
+          CURVEdraw() ;
+          T = T + 1 ;
+          if ( T >= 100 ){ PHASE = 3 ; }
+        }
+    } // PHASE == 2
+  
+    Q = Q + 1 ;
+  } // Q
+  Q = 0 ;
+  
+  if ( PHASE == 1 ){
+    stroke(0,0,0) ; 
+    strokeWeight(4) ;
+    if ( millis()-TT > T*50 ){
+      PX[T] = mouseX-300 ; PY[T] = mouseY-300 ;
+      if ( PX[T] < 25-300 ){ PX[T] = 25-300 ; }
+      if ( PX[T] > 575-300 ){ PX[T] = 575-300 ; }
+      if ( PY[T] < 25-300 ){ PY[T] = 25-300 ; }
+      if ( PY[T] > 575-300 ){ PY[T] = 575-300 ; }
+      if ( T > 0 ){ line(PX[T]+300,PY[T]+300,PX[T-1]+300,PY[T-1]+300) ; }
+      fill(0,0,0) ; rect(50,620,T*5,60) ;
+      noFill() ; rect(50,620,500,60) ;
+      T = T + 1 ;
+    }
+    if ( T >= 100 ){ 
+      PHASE = 2 ; 
+      background(200,200,200) ; 
+      TT = millis() ; T = 0 ; I = 0 ;
+      strokeWeight(1) ; stroke(0,0,0) ;
+      line(300,25,300,575) ; line(25,300,575,300) ;
+      stroke(0,0,255) ; fill(0,0,255) ;
+      writeFUNCTION() ;
+      strokeWeight(2) ;
+      CONTROLLERdraw() ;
+      strokeWeight(4) ;
+    }
+  } // PHASE == 1 
+  
+  if ( PHASE == 0 ){
+    strokeWeight(2) ; noFill() ;
+    background(200,200,200) ;
+    stroke(0,0,0) ;
+    line(mouseX,mouseY-40,mouseX,mouseY+40) ; line(mouseX-40,mouseY,mouseX+40,mouseY) ;
+    //rect(25,25,550,550) ;
+    strokeWeight(1) ;
+    line(300,25,300,575) ; line(25,300,575,300) ;
+  } // PHASE == 0
+  
+} // draw()
+
+
+
+void CURVEdraw(){
+  
+       X[0][T] = 0 ; Y[0][T] = 0 ; X[1][T] = 0 ; Y[1][T] = 0 ;
+       for ( I = 0 ; I <= 1 ; I++ ){
+         for ( II = 19 ; II >= 0 ; II-- ){
+            X[I][T] = X[I][T]+(BX[I][II]/(pow(float(T)/20-AX[I][II],DX[I][II]*2)+1)) ;
+            Y[I][T] = Y[I][T]+(BY[I][II]/(pow(float(T)/20-AY[I][II],DY[I][II]*2)+1)) ;
+         }
+       }
+       X[0][T] = X[0][T] + CX[0] ; Y[0][T] = Y[0][T] + CY[0] ;
+       X[1][T] = X[1][T] + CX[1] ; Y[1][T] = Y[1][T] + CY[1] ;
+       if ( T > 0 && Q == Qmax ){ 
+        stroke(0,0,0) ; line(PX[T]+300,PY[T]+300,PX[T-1]+300,PY[T-1]+300) ; 
+        stroke(255,0,0) ; line(X[0][T]+300,Y[0][T]+300,X[0][T-1]+300,Y[0][T-1]+300) ;
+        stroke(0,0,255) ; line(X[1][T]+300,Y[1][T]+300,X[1][T-1]+300,Y[1][T-1]+300) ;
+        }
+        
+} // CURVEdraw()
+
+
+
+void MUTATION(){
+  
+     H[0] = 0 ; H[1] = 0 ;
+     for ( I = 0 ; I <= 1 ; I++ ){
+       for ( T = 0 ; T < 100 ; T++ ){
+         H[I] = H[I] + sqrt(((PX[T]-X[I][T])*(PX[T]-X[I][T]))+((PY[T]-Y[I][T])*(PY[T]-Y[I][T]))) ;
+       }
+     }
+     if ( H[0] >= H[1] ){ 
+       for ( II = 0 ; II <= 19 ; II++ ){
+         AX[0][II] = AX[1][II] ; BX[0][II] = BX[1][II] ;
+         AY[0][II] = AY[1][II] ; BY[0][II] = BY[1][II] ;
+         DX[0][II] = DX[1][II] ; DY[0][II] = DY[1][II] ;
+       }
+       CX[0] = CX[1] ; CY[0] = CY[1] ;
+       I = 0 ; 
+     }else{ 
+       for ( II = 0 ; II <= 19 ; II++ ){
+         AX[1][II] = AX[0][II] ; BX[1][II] = BX[0][II] ;
+         AY[1][II] = AY[0][II] ; BY[1][II] = BY[0][II] ;
+         DX[1][II] = DX[0][II] ; DY[1][II] = DY[0][II] ;
+       }
+       CX[1] = CX[0] ; CY[1] = CY[0] ;
+       I = 1 ; 
+     }
+     
+     for ( II = 0 ; II < 20 ; II++ ){
+       if ( random(0,100) < 1 ){ AX[I][II] = random(0,+5) ; } 
+       if ( random(0,100) < 1 ){ AY[I][II] = random(0,+5) ; } 
+       if ( random(0,100) < 1 ){ BX[I][II] = BX[I][II] + random(-100,+100) ; } 
+       if ( random(0,100) < 1 ){ BY[I][II] = BY[I][II] + random(-100,+100) ; } 
+       if ( random(0,100) < 1 ){ DX[I][II] = int(random(0,+5)) ; } 
+       if ( random(0,100) < 1 ){ DY[I][II] = int(random(0,+5)) ; } 
+     }
+     if ( random(0,100) < 1 ){ CX[I] = CX[I] + random(-100,+100) ; } 
+     if ( random(0,100) < 1 ){ CY[I] = CY[I] + random(-100,+100) ; } 
+     
+     if ( BI == I ){ CT = CT + 1 ; }else{ CT = 0 ; }
+     BI = I ; 
+     if ( CT > 1500 ){
+       for( I = 0 ; I <= 1 ; I++ ){ 
+         for ( II = 0 ; II < 20 ; II++ ){
+           if ( random(0,100) < 20 ){ AX[I][II] = random(0,+5) ; } 
+           if ( random(0,100) < 20 ){ AY[I][II] = random(0,+5) ; } 
+           if ( random(0,100) < 20 ){ BX[I][II] = BX[I][II] + random(-100,+100) ; } 
+           if ( random(0,100) < 20 ){ BY[I][II] = BY[I][II] + random(-100,+100) ; } 
+           if ( random(0,100) < 20 ){ DX[I][II] = int(random(0,+5)) ; } 
+           if ( random(0,100) < 20 ){ DY[I][II] = int(random(0,+5)) ; } 
+         }
+         if ( random(0,100) < 20 ){ CX[I] = CX[I] + random(-100,+100) ; } 
+         if ( random(0,100) < 20 ){ CY[I] = CY[I] + random(-100,+100) ; } 
+         CT = 0 ; 
+       }
+     }
+  
+} // MUTATION()
+
+
+
+void writeFUNCTION(){
+  
+  textSize(16) ;
+  text("X(t)=",10,30) ;
+  textSize(10) ;
+  WX = 50 ; WY = 30 ; KD = 0 ;
+  for ( II = 0 ; II <= 19 ; II++ ){
+    if ( DX[I][II] != 0 ){
+      text(BX[I][II],WX+20,WY-10) ;
+      text("(t-"+nf(AX[I][II],1,5)+")   +1",WX,WY+10) ;
+      text("+",WX+95,WY) ;
+      line(WX,WY-5,WX+80,WY-5) ;
+      text(int(DX[I][II]*2),WX+50,WY+5) ;
+      WX = WX + 110 ; if ( WX > 500 ){ WX = 50 ; WY = WY + 60 ; }
+    }else{ KD = KD + (BX[I][II]/2) ; }
+  }
+  KD = KD + CX[I] ;
+  text("("+KD+")",WX,WY) ;
+  
+  textSize(16) ;
+  text("Y(t)=",10,330) ;
+  textSize(10) ;
+  WX = 50 ; WY = 330 ; KD = 0 ;
+  for ( II = 0 ; II <= 19 ; II++ ){
+    if ( DY[I][II] != 0 ){
+      text(BY[I][II],WX+20,WY-10) ;
+      text("(t-"+nf(AY[I][II],1,5)+")   +1",WX,WY+10) ;
+      text("+",WX+95,WY) ;
+      line(WX,WY-5,WX+80,WY-5) ;
+      text(int(DY[I][II]*2),WX+50,WY+5) ;
+      WX = WX + 110 ; if ( WX > 500 ){ WX = 50 ; WY = WY + 60 ; }
+    }else{ KD = KD + (BY[I][II]/2) ; }
+  }
+  KD = KD + CY[I] ;
+  text("("+KD+")",WX,WY) ;
+  
+} // writeFUNCTION()
+
+
+
+void CONTROLLERdraw(){
+  
+  fill(200,200,200) ; stroke(200,200,200) ;
+  rect(0,600,600,100) ;
+  
+  noFill() ; stroke(0,0,0) ;
+  rect(60,620,80,60) ;
+  if ( MODE == 1 ){ fill(255,255,0) ; }else{ noFill() ; }
+  rect(160,620,80,60) ;
+  if ( MODE == 2 ){ fill(255,255,0) ; }else{ noFill() ; }
+  rect(260,620,80,60) ;
+  if ( MODE == 3 ){ fill(255,255,0) ; }else{ noFill() ; }
+  rect(360,620,80,60) ;
+  
+  fill(0,0,0) ;
+  beginShape() ;
+  vertex(100,650) ; vertex(100,630) ; vertex(80,650) ; vertex(100,670) ;
+  vertex(100,650) ; vertex(120,630) ; vertex(120,670) ; vertex(100,650) ;
+  endShape() ;
+  rect(75,630,5,40) ;
+  
+  beginShape() ;
+  vertex(400,650) ; vertex(400,630) ; vertex(420,650) ; vertex(400,670) ;
+  vertex(400,650) ; vertex(380,630) ; vertex(380,670) ; vertex(400,650) ;
+  endShape() ;
+  rect(420,630,5,40) ;
+  
+  beginShape() ;
+  vertex(305,650) ; vertex(305,630) ; vertex(325,650) ; vertex(305,670) ;
+  vertex(305,650) ; vertex(285,630) ; vertex(285,670) ; vertex(305,650) ;
+  endShape() ;
+  
+  beginShape() ;
+  vertex(190,630) ; vertex(190,670) ; vertex(220,650) ;
+  endShape(CLOSE) ;
+  
+} // CONTROLLERdraw()
+
+
+
+void mousePressed(){
+  
+  if ( PHASE == 0 ){ PHASE = 1 ; TT = millis() ; }
+  if ( PHASE >= 2 ){ 
+    if ( ( mouseX > 60 ) && ( mouseY > 620 ) && ( mouseX < 140 ) && ( mouseY < 680 ) ){ setup() ; } 
+    if ( ( mouseX > 160 ) && ( mouseY > 620 ) && ( mouseX < 240 ) && ( mouseY < 680 ) ){ MODE = 1 ;  } 
+    if ( ( mouseX > 260 ) && ( mouseY > 620 ) && ( mouseX < 340 ) && ( mouseY < 680 ) ){ MODE = 2 ; } 
+    if ( ( mouseX > 360 ) && ( mouseY > 620 ) && ( mouseX < 440 ) && ( mouseY < 680 ) ){ MODE = 3 ; }
+  }
+  
+} // mousePressed()
